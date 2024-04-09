@@ -1,9 +1,9 @@
 # TON Connect
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/cameo-engineering/tonconnect)](https://goreportcard.com/report/github.com/cameo-engineering/tonconnect)
+[![Go Report Card](https://goreportcard.com/badge/github.com/k0marov/tonconnect)](https://goreportcard.com/report/github.com/k0marov/tonconnect)
 
 ## Getting Started
 
 ```bash
-go get github.com/cameo-engineering/tonconnect
+go get github.com/k0marov/tonconnect
 ```

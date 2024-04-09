@@ -1,4 +1,4 @@
-module github.com/cameo-engineering/tonconnect
+module github.com/k0marov/tonconnect
 
 go 1.21.5
 

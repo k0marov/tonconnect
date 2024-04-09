@@ -8,7 +8,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/cameo-engineering/tonconnect"
+	"github.com/k0marov/tonconnect"
 	"golang.org/x/exp/maps"
 )
 
