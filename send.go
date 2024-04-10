@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"log"
 	"strconv"
 	"time"
 
@@ -50,6 +51,7 @@ func (s *Session) SendTransaction(ctx context.Context, tx Transaction, options .
 
 	s.LastRequestID++
 	id := s.LastRequestID
+	log.Printf("updated request id to %d\n", s.LastRequestID)
 	g.Go(func() error {
 		tr, err := json.Marshal(tx)
 		if err != nil {
@@ -63,7 +65,7 @@ func (s *Session) SendTransaction(ctx context.Context, tx Transaction, options .
 		}
 
 		err = s.sendMessage(ctx, req, "sendTransaction", options...)
-
+		log.Printf("sent message, got error %v\n", err)
 		return err
 	})
 
@@ -80,6 +82,7 @@ func (s *Session) SendTransaction(ctx context.Context, tx Transaction, options .
 				}
 
 				if int64(id) == msgID {
+					log.Printf("found message with id %d, and error %v\n", msgID, msg.Message.Error)
 					if msg.Message.Error != nil {
 						if msg.Message.Error.Message != "" {
 							return fmt.Errorf("tonconnect: %s", msg.Message.Error.Message)

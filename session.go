@@ -172,7 +172,7 @@ func (s *Session) decrypt(from string, msg []byte, v any) (nacl.Key, error) {
 		return clientID, fmt.Errorf("tonconnect: failed to decrypt bridge message: %w", err)
 	}
 
-	fmt.Print(string(data))
+	log.Printf("got msg data: %q\n", string(data))
 
 	err = json.Unmarshal(data, v)
 	if err != nil {
