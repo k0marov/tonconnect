@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -74,14 +75,16 @@ func (s *Session) connectToBridge(ctx context.Context, bridgeURL string, msgs ch
 			From    string `json:"from"`
 			Message []byte `json:"message"`
 		}
+		id, err := strconv.ParseUint(e.LastEventID, 10, 64)
+		if err != nil {
+			log.Panicf("got non-int event id %q: %w", e.LastEventID, err)
+		}
+		s.LastEventID = id
+
 		if err := json.Unmarshal([]byte(e.Data), &bmsg); err == nil {
 			var msg walletMessage
 			if clientID, err := s.decrypt(bmsg.From, bmsg.Message, &msg); err == nil {
 				msgs <- bridgeMessage{BrdigeURL: bridgeURL, From: clientID, Message: msg}
-				id, err := strconv.ParseUint(e.LastEventID, 10, 64)
-				if err == nil {
-					s.LastEventID = id
-				}
 			}
 		}
 	})
