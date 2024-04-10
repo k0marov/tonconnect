@@ -71,7 +71,8 @@ func (s *Session) Disconnect(ctx context.Context, options ...bridgeMessageOption
 	g, ctx := errgroup.WithContext(ctx)
 	msgs := make(chan bridgeMessage)
 
-	id := s.LastRequestID + 1
+	s.LastRequestID++
+	id := s.LastRequestID
 	g.Go(func() error {
 		req := disconnectRequest{
 			ID:     strconv.FormatUint(id, 10),
@@ -80,9 +81,6 @@ func (s *Session) Disconnect(ctx context.Context, options ...bridgeMessageOption
 		}
 
 		err := s.sendMessage(ctx, req, "", options...)
-		if err == nil {
-			s.LastRequestID = id
-		}
 
 		return err
 	})

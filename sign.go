@@ -35,7 +35,8 @@ func (s *Session) SignData(ctx context.Context, data SignData, options ...bridge
 	g, ctx := errgroup.WithContext(ctx)
 	msgs := make(chan bridgeMessage)
 
-	id := s.LastRequestID + 1
+	s.LastRequestID++
+	id := s.LastRequestID
 	g.Go(func() error {
 		req := signDataRequest{
 			ID:     strconv.FormatUint(id, 10),
@@ -44,9 +45,6 @@ func (s *Session) SignData(ctx context.Context, data SignData, options ...bridge
 		}
 
 		err := s.sendMessage(ctx, req, "signData", options...)
-		if err == nil {
-			s.LastRequestID = id
-		}
 
 		return err
 	})

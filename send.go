@@ -48,7 +48,8 @@ func (s *Session) SendTransaction(ctx context.Context, tx Transaction, options .
 	g, ctx := errgroup.WithContext(ctx)
 	msgs := make(chan bridgeMessage)
 
-	id := s.LastRequestID + 1
+	s.LastRequestID++
+	id := s.LastRequestID
 	g.Go(func() error {
 		tr, err := json.Marshal(tx)
 		if err != nil {
@@ -62,9 +63,6 @@ func (s *Session) SendTransaction(ctx context.Context, tx Transaction, options .
 		}
 
 		err = s.sendMessage(ctx, req, "sendTransaction", options...)
-		if err == nil {
-			s.LastRequestID = id
-		}
 
 		return err
 	})
