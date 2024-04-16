@@ -44,7 +44,7 @@ type txOpt = func(*Transaction)
 
 type msgOpt = func(*Message)
 
-func (s *Session) SendTransaction(ctx context.Context, tx Transaction, options ...bridgeMessageOption) ([]byte, error) {
+func (s *Session) SendTransaction(ctx context.Context, tx Transaction, options ...BridgeMessageOption) ([]byte, error) {
 	g, ctx := errgroup.WithContext(ctx)
 	msgs := make(chan bridgeMessage)
 
