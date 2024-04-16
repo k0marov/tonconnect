@@ -28,12 +28,12 @@ type Session struct {
 	LastRequestID uint64   `json:"last_request_id,string,omitempty"`
 }
 
-type bridgeMessageOptions struct {
+type BridgeMessageOptions struct {
 	TTL   string
 	Topic string
 }
 
-type bridgeMessageOption = func(*bridgeMessageOptions)
+type BridgeMessageOption = func(*BridgeMessageOptions)
 
 func NewSession() (*Session, error) {
 	id, pk, err := box.GenerateKey(rand.Reader)
@@ -97,12 +97,12 @@ func (s *Session) connectToBridge(ctx context.Context, bridgeURL string, msgs ch
 	return nil
 }
 
-func (s *Session) sendMessage(ctx context.Context, msg any, topic string, options ...bridgeMessageOption) error {
+func (s *Session) sendMessage(ctx context.Context, msg any, topic string, options ...BridgeMessageOption) error {
 	if s.ID == nil || s.PrivateKey == nil || s.ClientID == nil || s.BridgeURL == "" {
 		return fmt.Errorf("tonconnect: session not established")
 	}
 
-	opts := &bridgeMessageOptions{TTL: "300"}
+	opts := &BridgeMessageOptions{TTL: "300"}
 	for _, opt := range options {
 		opt(opts)
 	}
@@ -180,8 +180,8 @@ func (s *Session) decrypt(from string, msg []byte, v any) (nacl.Key, error) {
 	return clientID, nil
 }
 
-func WithTTL(ttl uint64) bridgeMessageOption {
-	return func(opts *bridgeMessageOptions) {
+func WithTTL(ttl uint64) BridgeMessageOption {
+	return func(opts *BridgeMessageOptions) {
 		opts.TTL = strconv.FormatUint(ttl, 10)
 	}
 }

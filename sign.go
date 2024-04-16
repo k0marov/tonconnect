@@ -31,7 +31,7 @@ type signDataResponse struct {
 
 type signDataOpt = func(*SignData)
 
-func (s *Session) SignData(ctx context.Context, data SignData, options ...bridgeMessageOption) (*SignDataResult, error) {
+func (s *Session) SignData(ctx context.Context, data SignData, options ...BridgeMessageOption) (*SignDataResult, error) {
 	g, ctx := errgroup.WithContext(ctx)
 	msgs := make(chan bridgeMessage)
 

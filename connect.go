@@ -67,7 +67,7 @@ func (s *Session) Connect(ctx context.Context, wallets ...Wallet) (*ConnectRespo
 	return res, err
 }
 
-func (s *Session) Disconnect(ctx context.Context, options ...bridgeMessageOption) error {
+func (s *Session) Disconnect(ctx context.Context, options ...BridgeMessageOption) error {
 	g, ctx := errgroup.WithContext(ctx)
 	msgs := make(chan bridgeMessage)
 
