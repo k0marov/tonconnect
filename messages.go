@@ -67,7 +67,7 @@ type proof struct {
 	Payload   string `json:"payload"`
 }
 
-type signDataResult struct {
+type SignDataResult struct {
 	Signature []byte `json:"signature"`
 	Timestamp uint64 `json:"timestamp"`
 }

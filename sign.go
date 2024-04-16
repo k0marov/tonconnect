@@ -22,7 +22,7 @@ type SignData struct {
 
 type signDataResponse struct {
 	ID     string         `json:"id"`
-	Result signDataResult `json:"result,omitempty"`
+	Result SignDataResult `json:"result,omitempty"`
 	Error  *struct {
 		Code    uint64 `json:"code"`
 		Message string `json:"message"`
@@ -31,7 +31,7 @@ type signDataResponse struct {
 
 type signDataOpt = func(*SignData)
 
-func (s *Session) SignData(ctx context.Context, data SignData, options ...bridgeMessageOption) (*signDataResult, error) {
+func (s *Session) SignData(ctx context.Context, data SignData, options ...bridgeMessageOption) (*SignDataResult, error) {
 	g, ctx := errgroup.WithContext(ctx)
 	msgs := make(chan bridgeMessage)
 
@@ -49,7 +49,7 @@ func (s *Session) SignData(ctx context.Context, data SignData, options ...bridge
 		return err
 	})
 
-	var res signDataResult
+	var res SignDataResult
 	g.Go(func() error {
 		for {
 			select {
@@ -81,9 +81,9 @@ func (s *Session) SignData(ctx context.Context, data SignData, options ...bridge
 					}
 
 					var ok bool
-					res, ok = msg.Message.Result.(signDataResult)
+					res, ok = msg.Message.Result.(SignDataResult)
 					if !ok {
-						return fmt.Errorf("tonconnect: data sign result expected to be of type %q", "signDataResult")
+						return fmt.Errorf("tonconnect: data sign result expected to be of type %q", "SignDataResult")
 					}
 
 					return nil

@@ -9,7 +9,7 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-type connectResponse struct {
+type ConnectResponse struct {
 	Device deviceInfo         `json:"device,omitempty"`
 	Items  []connectItemReply `json:"items,omitempty"`
 }
@@ -20,13 +20,13 @@ type disconnectRequest struct {
 	Params []any  `json:"params"`
 }
 
-func (s *Session) Connect(ctx context.Context, wallets ...Wallet) (*connectResponse, error) {
+func (s *Session) Connect(ctx context.Context, wallets ...Wallet) (*ConnectResponse, error) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	g, ctx := errgroup.WithContext(ctx)
 	msgs := make(chan bridgeMessage)
 
-	res := &connectResponse{}
+	res := &ConnectResponse{}
 	g.Go(func() error {
 		for {
 			select {
