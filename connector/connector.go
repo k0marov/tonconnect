@@ -72,3 +72,7 @@ func (c *Connector) SignData(ctx context.Context, data tonconnect.SignData, opti
 	}
 	return resp, nil
 }
+
+func (c *Connector) GenerateUniversalLink(wallet tonconnect.Wallet, connreq tonconnect.ConnectRequest, options ...tonconnect.LinkOption) (string, error) {
+	return c.session.GenerateUniversalLink(wallet, connreq, options...)
+}

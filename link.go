@@ -24,7 +24,7 @@ type linkOptions struct {
 	ReturnStrategy string
 }
 
-type linkOption = func(*linkOptions)
+type LinkOption = func(*linkOptions)
 
 const (
 	wrapURL string = "https://ton-connect.github.io/open-tc"
@@ -49,7 +49,7 @@ func WithProofRequest(payload string) connReqOpt {
 	}
 }
 
-func (s *Session) GenerateUniversalLink(wallet Wallet, connreq ConnectRequest, options ...linkOption) (string, error) {
+func (s *Session) GenerateUniversalLink(wallet Wallet, connreq ConnectRequest, options ...LinkOption) (string, error) {
 	opts := &linkOptions{ReturnStrategy: "back"}
 	for _, opt := range options {
 		opt(opts)
@@ -89,7 +89,7 @@ func (s *Session) GenerateUniversalLink(wallet Wallet, connreq ConnectRequest, o
 	return link, nil
 }
 
-func (s *Session) GenerateDeeplink(connreq ConnectRequest, options ...linkOption) (string, error) {
+func (s *Session) GenerateDeeplink(connreq ConnectRequest, options ...LinkOption) (string, error) {
 	w := Wallet{UniversalURL: `tc://`}
 
 	return s.GenerateUniversalLink(w, connreq, options...)
@@ -100,19 +100,19 @@ func WrapDeeplink(link string) string {
 	return fmt.Sprintf("%s?connect=%s", wrapURL, link)
 }
 
-func WithBackReturnStrategy() linkOption {
+func WithBackReturnStrategy() LinkOption {
 	return func(opts *linkOptions) {
 		opts.ReturnStrategy = "back"
 	}
 }
 
-func WithNoneReturnStrategy() linkOption {
+func WithNoneReturnStrategy() LinkOption {
 	return func(opts *linkOptions) {
 		opts.ReturnStrategy = "none"
 	}
 }
 
-func WithURLReturnStrategy(url string) linkOption {
+func WithURLReturnStrategy(url string) LinkOption {
 	return func(opts *linkOptions) {
 		opts.ReturnStrategy = url
 	}
