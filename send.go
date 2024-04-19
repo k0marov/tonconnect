@@ -48,8 +48,8 @@ func (s *Session) SendTransaction(ctx context.Context, tx Transaction, options .
 	g, ctx := errgroup.WithContext(ctx)
 	msgs := make(chan bridgeMessage)
 
-	s.LastRequestID++
-	id := s.LastRequestID
+	s.LastRequestID.Add(1)
+	id := s.LastRequestID.Load()
 	g.Go(func() error {
 		tr, err := json.Marshal(tx)
 		if err != nil {
@@ -75,7 +75,7 @@ func (s *Session) SendTransaction(ctx context.Context, tx Transaction, options .
 			case msg := <-msgs:
 				msgID, err := msg.Message.ID.Int64()
 				if err == nil {
-					s.LastRequestID = uint64(msgID)
+					s.LastRequestID.Store(uint64(msgID))
 				}
 
 				if int64(id) == msgID {

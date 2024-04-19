@@ -9,23 +9,23 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/kevinburke/nacl"
+	"github.com/kevinburke/nacl/box"
+	"github.com/tmaxmax/go-sse"
 	"log"
 	"net/http"
 	"net/url"
 	"strconv"
-
-	"github.com/kevinburke/nacl"
-	"github.com/kevinburke/nacl/box"
-	"github.com/tmaxmax/go-sse"
+	"sync/atomic"
 )
 
 type Session struct {
-	ID            nacl.Key `json:"id"`
-	PrivateKey    nacl.Key `json:"private_key"`
-	ClientID      nacl.Key `json:"client_id,omitempty"`
-	BridgeURL     string   `json:"brdige_url,omitempty"`
-	LastEventID   uint64   `json:"last_event_id,string,omitempty"`
-	LastRequestID uint64   `json:"last_request_id,string,omitempty"`
+	ID            nacl.Key      `json:"id"`
+	PrivateKey    nacl.Key      `json:"private_key"`
+	ClientID      nacl.Key      `json:"client_id,omitempty"`
+	BridgeURL     string        `json:"brdige_url,omitempty"`
+	LastEventID   atomic.Uint64 `json:"last_event_id,string,omitempty"`
+	LastRequestID atomic.Uint64 `json:"last_request_id,string,omitempty"`
 }
 
 type BridgeMessageOptions struct {
@@ -41,7 +41,9 @@ func NewSession() (*Session, error) {
 		return nil, fmt.Errorf("tonconnect: failed to generate key pair: %w", err)
 	}
 
-	s := &Session{ID: id, PrivateKey: pk, LastRequestID: 1}
+	s := &Session{ID: id, PrivateKey: pk}
+	s.LastRequestID.Store(1)
+	s.LastEventID.Store(1)
 
 	return s, nil
 }
@@ -59,8 +61,8 @@ func (s *Session) connectToBridge(ctx context.Context, bridgeURL string, msgs ch
 	u = u.JoinPath("/events")
 	q := u.Query()
 	q.Set("client_id", hex.EncodeToString((*s.ID)[:]))
-	if s.LastEventID > 0 {
-		q.Set("last_event_id", strconv.FormatUint(uint64(s.LastEventID), 10))
+	if s.LastEventID.Load() > 0 {
+		q.Set("last_event_id", strconv.FormatUint(s.LastEventID.Load(), 10))
 	}
 	u.RawQuery = q.Encode()
 
@@ -77,9 +79,9 @@ func (s *Session) connectToBridge(ctx context.Context, bridgeURL string, msgs ch
 		}
 		id, err := strconv.ParseUint(e.LastEventID, 10, 64)
 		if err != nil {
-			log.Panicf("got non-int event id %q: %w", e.LastEventID, err)
+			log.Panicf("got non-int event id %q: %v", e.LastEventID, err)
 		}
-		s.LastEventID = id
+		s.LastEventID.Store(id)
 
 		if err := json.Unmarshal([]byte(e.Data), &bmsg); err == nil {
 			var msg walletMessage

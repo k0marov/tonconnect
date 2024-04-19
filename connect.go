@@ -38,7 +38,7 @@ func (s *Session) Connect(ctx context.Context, wallets ...Wallet) (*ConnectRespo
 
 					msgID, err := msg.Message.ID.Int64()
 					if err == nil {
-						s.LastRequestID = uint64(msgID)
+						s.LastRequestID.Store(uint64(msgID))
 					}
 
 					s.ClientID = msg.From
@@ -71,8 +71,8 @@ func (s *Session) Disconnect(ctx context.Context, options ...BridgeMessageOption
 	g, ctx := errgroup.WithContext(ctx)
 	msgs := make(chan bridgeMessage)
 
-	s.LastRequestID++
-	id := s.LastRequestID
+	s.LastRequestID.Add(1)
+	id := s.LastRequestID.Load()
 	g.Go(func() error {
 		req := disconnectRequest{
 			ID:     strconv.FormatUint(id, 10),
@@ -93,7 +93,7 @@ func (s *Session) Disconnect(ctx context.Context, options ...BridgeMessageOption
 			case msg := <-msgs:
 				msgID, err := msg.Message.ID.Int64()
 				if err == nil {
-					s.LastRequestID = uint64(msgID)
+					s.LastRequestID.Store(uint64(msgID))
 				}
 
 				if int64(id) == msgID {
