@@ -71,7 +71,14 @@ func (s *Session) connectToBridge(ctx context.Context, bridgeURL string, msgs ch
 		return fmt.Errorf("tonconnect: failed to initialize HTTP request: %w", err)
 	}
 
-	conn := sse.NewConnection(req)
+	client := sse.DefaultClient
+	client.ResponseValidator = func(response *http.Response) error {
+		if response.StatusCode == http.StatusServiceUnavailable {
+			return ErrBridgeUnavailable
+		}
+		return sse.DefaultValidator(response)
+	}
+	conn := client.NewConnection(req)
 	unsub := conn.SubscribeEvent("message", func(e sse.Event) {
 		var bmsg struct {
 			From    string `json:"from"`
