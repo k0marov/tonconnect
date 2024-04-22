@@ -41,17 +41,16 @@ func (c *Connector) SendTransaction(ctx context.Context, tx tonconnect.Transacti
 	return resp, nil
 }
 
-//func (c *Connector) Connect(ctx context.Context, wallets ...tonconnect.Wallet) (*tonconnect.ConnectResponse, error) {
-//	resp, err := c.session.Connect(ctx, wallets...)
-//	if err != nil {
-//		return nil, err
+//	func (c *Connector) Connect(ctx context.Context, wallets ...tonconnect.Wallet) (*tonconnect.ConnectResponse, error) {
+//		resp, err := c.session.Connect(ctx, wallets...)
+//		if err != nil {
+//			return nil, err
+//		}
+//		if err := c.storage.Set(c.session); err != nil {
+//			return nil, fmt.Errorf("saving session after sucessful Connect: %w", err)
+//		}
+//		return resp, nil
 //	}
-//	if err := c.storage.Set(c.session); err != nil {
-//		return nil, fmt.Errorf("saving session after sucessful Connect: %w", err)
-//	}
-//	return resp, nil
-//}
-
 func (c *Connector) Connect(ctx context.Context, wallets ...tonconnect.Wallet) (*tonconnect.ConnectResponse, error) {
 	var wg sync.WaitGroup
 	respCh := make(chan *tonconnect.ConnectResponse)
