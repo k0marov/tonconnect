@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/k0marov/tonconnect"
+	"sync"
 )
 
 type Connector struct {
@@ -40,15 +41,60 @@ func (c *Connector) SendTransaction(ctx context.Context, tx tonconnect.Transacti
 	return resp, nil
 }
 
+//func (c *Connector) Connect(ctx context.Context, wallets ...tonconnect.Wallet) (*tonconnect.ConnectResponse, error) {
+//	resp, err := c.session.Connect(ctx, wallets...)
+//	if err != nil {
+//		return nil, err
+//	}
+//	if err := c.storage.Set(c.session); err != nil {
+//		return nil, fmt.Errorf("saving session after sucessful Connect: %w", err)
+//	}
+//	return resp, nil
+//}
+
 func (c *Connector) Connect(ctx context.Context, wallets ...tonconnect.Wallet) (*tonconnect.ConnectResponse, error) {
-	resp, err := c.session.Connect(ctx, wallets...)
-	if err != nil {
-		return nil, err
+	var wg sync.WaitGroup
+	respCh := make(chan *tonconnect.ConnectResponse)
+	errCh := make(chan error, len(wallets))
+
+	for _, wallet := range wallets {
+		wg.Add(1)
+		go func(w tonconnect.Wallet) {
+			defer wg.Done()
+			resp, err := c.session.Connect(ctx, w)
+			if err != nil {
+				errCh <- err
+			} else {
+				select {
+				case respCh <- resp:
+					return
+				default:
+				}
+			}
+		}(wallet)
 	}
-	if err := c.storage.Set(c.session); err != nil {
-		return nil, fmt.Errorf("saving session after sucessful Connect: %w", err)
+
+	go func() {
+		wg.Wait()
+		close(respCh)
+		close(errCh)
+	}()
+
+	for {
+		select {
+		case resp := <-respCh:
+			if resp != nil {
+				if err := c.storage.Set(c.session); err != nil {
+					return nil, fmt.Errorf("saving session after successful Connect: %w", err)
+				}
+				return resp, nil
+			}
+		case _, ok := <-errCh:
+			if !ok {
+				return nil, fmt.Errorf("all connect attempts failed")
+			}
+		}
 	}
-	return resp, nil
 }
 
 func (c *Connector) Disconnect(ctx context.Context, options ...tonconnect.BridgeMessageOption) error {
