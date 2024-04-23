@@ -37,9 +37,10 @@ func (s *Session) Connect(ctx context.Context, wallets ...Wallet) (*ConnectRespo
 					cancel()
 
 					msgID, err := msg.Message.ID.Int64()
-					if err == nil {
-						s.LastRequestID.Store(uint64(msgID))
+					if err != nil {
+						return fmt.Errorf("converting id to int64: %w", err)
 					}
+					s.LastRequestID.Store(uint64(msgID))
 
 					s.ClientID = msg.From
 					s.BridgeURL = msg.BrdigeURL

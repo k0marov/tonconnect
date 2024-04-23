@@ -12,10 +12,10 @@ import (
 	"github.com/kevinburke/nacl"
 	"github.com/kevinburke/nacl/box"
 	"github.com/tmaxmax/go-sse"
-	"log"
 	"net/http"
 	"net/url"
 	"strconv"
+	"sync"
 	"sync/atomic"
 )
 
@@ -24,7 +24,8 @@ type Session struct {
 	PrivateKey    nacl.Key      `json:"private_key"`
 	ClientID      nacl.Key      `json:"client_id,omitempty"`
 	BridgeURL     string        `json:"brdige_url,omitempty"`
-	LastEventID   atomic.Uint64 `json:"last_event_id,string,omitempty"`
+	LastEventID   string        `json:"last_event_id,string,omitempty"`
+	LastEventIDMu sync.Mutex    `json:"-"`
 	LastRequestID atomic.Uint64 `json:"last_request_id,string,omitempty"`
 }
 
@@ -43,7 +44,6 @@ func NewSession() (*Session, error) {
 
 	s := &Session{ID: id, PrivateKey: pk}
 	s.LastRequestID.Store(1)
-	s.LastEventID.Store(1)
 
 	return s, nil
 }
@@ -61,9 +61,11 @@ func (s *Session) connectToBridge(ctx context.Context, bridgeURL string, msgs ch
 	u = u.JoinPath("/events")
 	q := u.Query()
 	q.Set("client_id", hex.EncodeToString((*s.ID)[:]))
-	if s.LastEventID.Load() > 0 {
-		q.Set("last_event_id", strconv.FormatUint(s.LastEventID.Load(), 10))
+	s.LastEventIDMu.Lock()
+	if s.LastEventID != "" {
+		q.Set("last_event_id", s.LastEventID)
 	}
+	s.LastEventIDMu.Unlock()
 	u.RawQuery = q.Encode()
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), http.NoBody)
@@ -84,11 +86,9 @@ func (s *Session) connectToBridge(ctx context.Context, bridgeURL string, msgs ch
 			From    string `json:"from"`
 			Message []byte `json:"message"`
 		}
-		id, err := strconv.ParseUint(e.LastEventID, 10, 64)
-		if err != nil {
-			log.Panicf("got non-int event id %q: %v", e.LastEventID, err)
-		}
-		s.LastEventID.Store(id)
+		s.LastEventIDMu.Lock()
+		s.LastEventID = e.LastEventID
+		s.LastEventIDMu.Unlock()
 
 		if err := json.Unmarshal([]byte(e.Data), &bmsg); err == nil {
 			var msg walletMessage
